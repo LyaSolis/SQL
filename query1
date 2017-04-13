@@ -1,0 +1,3 @@
+SELECT id, InvoiceNumber, InvoiceType, InvoiceDate, DocumentStatus, DataState, ErrorsCount, Errors
+FROM `release-docurec`.invoice
+WHERE (InvoiceDate BETWEEN '2014-01-30%' AND '2014-04-10%') AND InvoiceNumber !="" AND ErrorsCount >= 1;
