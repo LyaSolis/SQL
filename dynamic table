@@ -1,0 +1,58 @@
+DROP table hcu_collection;
+
+CREATE TABLE hcu_collection (
+    license_id int not null,
+    collect_date DATE not null,
+    total_hv_cores int not null
+);
+
+
+INSERT INTO hcu_collection (license_id, collect_date, total_hv_cores)
+VALUES
+('18', '2017-05-07', '1108'),
+('67', '2017-05-06', '436'), 
+('102', '2017-05-08', '140'),
+('1342', '2017-05-05', '536'),
+('18', '2017-05-06', '287');
+
+
+SELECT * FROM hcu_collection;
+
+
+SELECT license_id, collect_date, MAX(total_hv_cores) cores
+FROM hcu_collection
+WHERE collect_date >= SUBDATE(CURDATE(), 3)
+GROUP BY license_id, collect_date
+ORDER BY collect_date ASC;
+
+
+DROP TABLE IF EXISTS t_results;
+ 
+CREATE TEMPORARY TABLE t_results AS
+SELECT license_id, collect_date, MAX(total_hv_cores) cores
+FROM hcu_collection
+WHERE collect_date >= SUBDATE(CURDATE(), 3)
+GROUP BY license_id, collect_date
+ORDER BY collect_date ASC;
+
+--------------
+
+SELECT CONCAT('
+SELECT license_id, ',cores_by_dates,'
+FROM t_results 
+GROUP BY license_id
+ORDER BY license_id'
+)
+INTO @query
+FROM
+(
+SELECT GROUP_CONCAT(CONCAT('IFNULL(MAX(CASE WHEN collect_date=''',actual_date,''' THEN cores END), ''-'') AS "',col_name,'"')) cores_by_dates
+FROM (
+SELECT actual_date, DATE_FORMAT(actual_date,'%a %d/%m') AS col_name
+FROM (SELECT DISTINCT collect_date AS actual_date FROM t_results) AS dates
+)dates_with_col_names) 
+result;
+
+PREPARE statement FROM @query;
+EXECUTE statement;
+DEALLOCATE PREPARE statement;
