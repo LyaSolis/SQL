@@ -1,0 +1,3 @@
+SELECT *, IF (users.type = 1, p.name, c.name) AS name FROM users
+LEFT JOIN private AS p ON (users.type = 1 AND users.id = p.user_id) 
+LEFT JOIN company AS c ON (users.type != 1 AND users.id = c.user_id);
