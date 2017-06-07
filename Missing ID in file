@@ -1,0 +1,4 @@
+select DISTINCT GROUP_CONCAT(CONCAT('"',Company_Name, '"') SEPARATOR ',') from Email_Error;
+select id, Name 
+from company (<--table containing names of companies and company ids) 
+where Name in("value1", "value2", etc);
