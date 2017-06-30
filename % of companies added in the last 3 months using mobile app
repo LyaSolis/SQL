@@ -1,0 +1,20 @@
+ SELECT 
+ COUNT(FileSourceType) AS TotalSignUps,
+ SUM(CASE WHEN FileSourceType = 'Mobile' THEN 1 ELSE 0 END) AS Mobile,
+ CONCAT(ROUND(SUM(CASE WHEN FileSourceType = 'Mobile' THEN 1 ELSE 0 END)/COUNT(FileSourceType)*100,2), '%') AS PercentageOfMob
+ FROM
+	(SELECT ou.Organisationid, aa.CompanyName As BusinessName, f.CompanyID, f.CompanyName, CountryCode, DateAdded, f.FileSourceType
+	FROM accountaddress aa
+	JOIN organisationuser ou ON ou.UserAuthId = aa.UserId
+	JOIN (SELECT b.OrganisationId, b.CompanyID, b.CompanyName, DATE_FORMAT(LEAST(b.a, b.b, b.c), "%Y-%m-%d") AS DateAdded, b.FileSourceType
+		FROM 
+			(SELECT DISTINCT c.OrganisationID AS OrganisationId, w.CompanyID, FileSourceType, c.Name AS CompanyName, MIN(w.UpdatedUtc) a, MIN(c.UpdatedUtc) b, MIN(DATE_FORMAT(ch.InsertedUtc, "%Y-%m-%d %H:%i:%s %f")) c
+			 FROM company c
+			 LEFT JOIN workflow w ON w.companyId = c.Id
+			 LEFT JOIN chunkedfile ch ON ch.ForeignRef = w.Id
+			 WHERE ForeignRefType = 'WorkflowId' 
+			 GROUP BY CompanyID
+			 ) b 
+		  ) F ON F.OrganisationID = ou.OrganisationId
+	WHERE F.organisationid != 0 AND F.organisationid >0 AND f.DateAdded >= DATE_SUB(CURDATE(), INTERVAL 90 DAY)
+ ORDER BY ou.Organisationid ASC) q;
