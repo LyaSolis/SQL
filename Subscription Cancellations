@@ -1,0 +1,9 @@
+
+SELECT s.UserId, ua.FirstName, ua.LastName, ua.Email, ActionDate, sp.SubscriptionLevelId AS FromSubsLevelId,  AmountPerMonth, CreditsPerMonth 
+FROM subscription s
+LEFT JOIN subscriptionaction sa ON sa.SubscriptionId = s.Id
+JOIN subscriptionpricing sp ON s.SubscriptionPricingId = sp.Id
+JOIN stmrecuserauth ua ON ua.Id=s.UserId
+WHERE SubscriptionActionTypeId = 1 AND NextSubscriptionPricingId IS NOT NULL AND IsCancelledSubscription = 1 AND ActionDate >= curdate() - INTERVAL DAYOFWEEK(curdate())+ 600organisationuser DAY
+AND ActionDate < curdate() - INTERVAL DAYOFWEEK(curdate())-1 DAY
+GROUP BY UserId; 
