@@ -1,0 +1,23 @@
+SELECT 
+
+COUNT(Sales.InvoiceType LIKE '%Sales%') AS Total,
+SUM(CASE WHEN Sales.InvoiceType LIKE '%Sales%' AND Purchases.InvoiceType IS NULL THEN 1 ELSE 0 END) OnlySales,
+CONCAT(ROUND(SUM(CASE WHEN Sales.InvoiceType LIKE '%Sales%' AND Purchases.InvoiceType IS NULL THEN 1 ELSE 0 END)/COUNT(Sales.InvoiceType LIKE '%Sales%')*100,2), '%') AS PercentSalesONLY
+FROM
+    (SELECT WorkflowId, w.CompanyId, UserAuthId, InvoiceType, i.id, ou.IsUserAuthorizedForPayments
+     FROM invoice i
+      LEFT JOIN workflow w ON w.Id = i.WorkflowId
+      LEFT JOIN organisationuser ou ON ou.OrganisationId = w.OrganisationId
+      WHERE WorkflowId > 0 AND InvoiceType LIKE '%Sales%' AND ou.IsUserAuthorizedForPayments = 1
+      GROUP BY w.CompanyId) Sales
+      
+    LEFT OUTER JOIN 
+    
+    (SELECT WorkflowId, w.CompanyId, UserAuthId, InvoiceType, i.id, ou.IsUserAuthorizedForPayments
+     FROM invoice i
+       LEFT JOIN workflow w ON w.Id = i.WorkflowId
+       LEFT JOIN organisationuser ou ON ou.OrganisationId = w.OrganisationId
+       WHERE WorkflowId > 0 AND ou.IsUserAuthorizedForPayments = 1 AND InvoiceType LIKE '%Purchase%'
+       GROUP BY w.CompanyId) Purchases
+       
+ON Purchases.CompanyId = Sales.CompanyId;
