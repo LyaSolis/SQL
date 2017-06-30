@@ -1,0 +1,31 @@
+SELECT 
+COUNT(DISTINCT TotBillAcc.UserAuthId) AS TotalAccs,
+SUM(CASE WHEN BillAccStat.Id IS NOT NULL AND BillAccInv.id IS NULL THEN 1 ELSE 0 END) AS StatementOnly,
+CONCAT(ROUND((SUM(CASE WHEN BillAccStat.Id IS NOT NULL AND BillAccInv.id IS NULL THEN 1 ELSE 0 END))/(COUNT(DISTINCT TotBillAcc.UserAuthId))*100, 2), '%') AS PrcntStatmntOnly
+-- SELECT *
+FROM
+(
+SELECT DISTINCT Organisationid, UserAuthId FROM organisationuser WHERE IsUserAuthorizedForPayments = 1 AND Organisationid >0
+) AS TotBillAcc
+LEFT OUTER JOIN 
+(
+SELECT sc.UserAuthId, sc.Organisationid, sc.CompanyId, sc.Id
+FROM statementspagecreditusage sc
+LEFT JOIN organisationuser ou ON ou.UserAuthId = sc.UserAuthId
+WHERE ou.IsUserAuthorizedForPayments = 1 
+GROUP BY sc.UserAuthId
+) AS BillAccStat 
+ON TotBillAcc.UserAuthId = BillAccStat.UserAuthId
+
+LEFT OUTER JOIN 
+
+(
+SELECT ou.UserAuthId, ou.organisationId, ou.CompanyId, i.id
+FROM organisationuser ou  
+LEFT JOIN workflow w ON ou.organisationid = w.organisationid
+LEFT JOIN invoice i ON i.workflowId = w.Id
+where w.organisationid > 0 AND isuserauthorizedforpayments = 1 -- AND i.id IS NULL
+group by ou.UserAuthId
+) AS BillAccInv 
+ON BillAccInv.UserAuthId = BillAccStat.UserAuthId
+;
