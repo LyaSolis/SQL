@@ -1,0 +1,38 @@
+SET SESSION group_concat_max_len = 1000000;
+
+SELECT GROUP_CONCAT('
+SELECT DataProcessedBy,  Email , ',credits_by_dates,'  
+FROM invoice 
+JOIN userauth ON userauth.id = invoice.DataProcessedBy
+WHERE DataProcessedBy IS NOT NULL AND DocumentStatus != ''reject'' AND userauth.roles LIKE (''%data%'')
+GROUP BY DataProcessedBy
+')
+INTO @query
+FROM
+(
+	SELECT 
+		GROUP_CONCAT(credits_by_dates) credits_by_dates
+	FROM (
+		SELECT 
+			GROUP_CONCAT(
+				DISTINCT CONCAT('SUM(IFNULL(CASE WHEN (IsLineItemsCaptured = 0 AND Inserted BETWEEN ''',day_start,''' AND ''',day_end,''') THEN 1 
+											     WHEN (IsLineItemsCaptured = 1 AND Inserted BETWEEN ''',day_start,''' AND ''',day_end,''') THEN 2
+                                                 END, 0)) AS "',col_name,'"')
+			) credits_by_dates
+		FROM (
+			SELECT 
+				actual_date, 
+				DATE_FORMAT(actual_date,'%a %d/%m') AS col_name, 
+				DATE_FORMAT(actual_date,'%Y-%m-%d') day_start,
+				DATE_FORMAT(DATE_ADD(actual_date, INTERVAL 1 DAY),'%Y-%m-%d') day_end
+			FROM (SELECT DISTINCT Inserted AS actual_date FROM invoice) AS dates
+		) dates_with_col_names
+		WHERE actual_date >= SUBDATE(CURDATE(), 120)
+		GROUP BY day_start
+        ORDER BY day_start DESC 
+	) t
+) 
+result;
+
+PREPARE statement FROM @query;
+EXECUTE statement;
