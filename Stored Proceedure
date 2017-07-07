@@ -1,0 +1,64 @@
+drop PROCEDURE `Top6`;
+DELIMITER //
+
+CREATE PROCEDURE `Top6` ()
+BEGIN
+DECLARE done INT DEFAULT FALSE;
+DECLARE V_Id INT DEFAULT 0;
+DECLARE cnt INT default 0;
+DECLARE v_total double default 0.0;
+DECLARE v_total1 DOUBLE default 0.0;
+DECLARE v_total2 double default 0.0;
+DECLARE v_total3 double default 0.0;
+DECLARE v_total4 double default 0.0;
+DECLARE v_total5 double default 0.0;
+DECLARE v_total6 double default 0.0;
+
+DECLARE cur1 CURSOR FOR SELECT DISTINCT Id FROM VWTop6 order by id,yearmonth;
+DECLARE cur2 CURSOR FOR SELECT Total from VWTop6 where Id=V_id;
+DECLARE CONTINUE HANDLER FOR NOT FOUND SET done = TRUE;
+
+CREATE TABLE IF NOT EXISTS Temp1 (Id INT,Total1 Double,Total2 Double,Total3 Double,Total4 Double,Total5 Double,Total6 Double);
+
+delete from temp1;
+
+OPEN cur1; /* opens the result set produced by: SELECT DISTINCT Id FROM VWTop6 order by id,yearmonth*/
+read_loop1: LOOP /*NAMED loop*/
+    FETCH cur1 INTO V_Id; /*gets the rows, will fail passed the last row */
+    IF done THEN
+			LEAVE read_loop1;
+	END IF;
+	set cnt=0;
+    set v_total1=0.0;
+    set v_total2=0.0;
+    set v_total3=0.0;
+    set v_total4=0.0;
+    set v_total5=0.0;
+    set v_total6=0.0;
+    
+    OPEN cur2; /*SELECT Total from VWTop6 where Id=V_id*/
+    read_loop2:LOOP
+		FETCH cur2 INTO v_total;
+        IF done THEN
+			LEAVE read_loop2;
+		END IF;
+        set cnt=cnt+1;
+        CASE cnt
+				WHEN 1 THEN set v_total1=v_total;
+				WHEN 2 THEN set v_total2=v_total;
+                WHEN 3 THEN set v_total3=v_total;
+                WHEN 4 THEN set v_total4=v_total;
+                WHEN 5 THEN set v_total5=v_total;
+                WHEN 6 THEN set v_total6=v_total;
+                ELSE set v_total6=v_total;
+		END CASE;
+    END LOOP;
+    CLOSE CUR2;
+    set done =false;
+    insert into Temp1 (Id,Total1,Total2,Total3,Total4,Total5,Total6) values (V_id,v_total1,v_total2,v_total3,v_total4,v_total5,v_total6);
+END LOOP;    
+CLOSE cur1;
+select  * from temp1 AS result;
+END//
+
+CALL top6();
