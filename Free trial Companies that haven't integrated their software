@@ -1,0 +1,8 @@
+SELECT s.UserID, wf.CompanyId, wf.Id AS workflowId, wf.Name,  wfl.id AS WFL, wfl.AccountingPackage
+FROM subscription s
+LEFT JOIN subscriptionaction sa ON sa.SubscriptionId = s.Id 
+LEFT JOIN organisationuser ou ON ou.UserAuthId = s.UserId AND ou.IsUserAuthorizedForPayments = 1
+LEFT JOIN workflow wf ON ou.OrganisationId = wf.OrganisationId
+LEFT JOIN workflowlink wfl ON wf.Id = wfl.WorkflowId 
+WHERE wf.Id > 0 AND wf.companyId > 0 AND SubscriptionActionTypeId = 2 AND IsCancelledSubscription = 0 and Current = 1 and s.userid > 0 AND wfl.AccountingPackage is null
+GROUP BY wf.CompanyId;
