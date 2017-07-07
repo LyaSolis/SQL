@@ -1,0 +1,7 @@
+
+SELECT UserId, Email, IsCancelledSubscription, ActionDate, CreditChange, CreditBalance
+FROM subscription s
+LEFT JOIN subscriptionaction sa ON sa.SubscriptionId = s.Id
+LEFT JOIN userauth ua ON ua.Id = s.UserId
+WHERE SubscriptionActionTypeId = 2 AND UsageCreditId = 0 AND IsCancelledSubscription = 0
+;
