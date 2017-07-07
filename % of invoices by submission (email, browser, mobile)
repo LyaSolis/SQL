@@ -1,0 +1,13 @@
+SELECT FileSourceType, FilesUploaded, Percentage FROM
+(SELECT 'BrowserUpload' FileSourceType, SUM(CASE WHEN FileSourceType = 'BrowserUpload' THEN 1 ELSE 0 END) FilesUploaded, CONCAT(ROUND((SUM(CASE WHEN FileSourceType = 'BrowserUpload' THEN 1 ELSE 0 END)/COUNT(FileSourceType))*100,2),'%') Percentage FROM chunkedfile
+UNION ALL 
+SELECT 'All' FileSourceType, SUM(CASE WHEN FileSourceType = 'All' THEN 1 ELSE 0 END), CONCAT(ROUND((SUM(CASE WHEN FileSourceType = 'All' THEN 1 ELSE 0 END)/COUNT(FileSourceType))*100,2),'%') FROM chunkedfile
+UNION ALL
+SELECT 'ScanTool'  FileSourceType,  SUM(CASE WHEN FileSourceType = 'ScanTool' THEN 1 ELSE 0 END), CONCAT(ROUND((SUM(CASE WHEN FileSourceType = 'ScanTool' THEN 1 ELSE 0 END)/COUNT(FileSourceType))*100,2),'%') FROM chunkedfile
+UNION ALL
+SELECT 'Mobile' FileSourceType,  SUM(CASE WHEN FileSourceType = 'Mobile' THEN 1 ELSE 0 END), CONCAT(ROUND((SUM(CASE WHEN FileSourceType = 'Mobile' THEN 1 ELSE 0 END)/COUNT(FileSourceType))*100,2),'%') FROM chunkedfile 
+UNION ALL
+SELECT 'Email' FileSourceType,  SUM(CASE WHEN FileSourceType = 'Email' THEN 1 ELSE 0 END), CONCAT(ROUND((SUM(CASE WHEN FileSourceType = 'Email' THEN 1 ELSE 0 END)/COUNT(FileSourceType))*100,2),'%') FROM chunkedfile
+UNION ALL
+SELECT 'TOTAL' FileSourceType, COUNT(FileSourceType) Total, NULL  FROM chunkedfile) c
+
